@@ -1,0 +1,42 @@
+.chat-window {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bubble {
+  max-width: 70%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+}
+
+.bubble.user {
+  align-self: flex-end;
+  background: #a8a8a8;
+}
+
+.bubble.agent {
+  align-self: flex-start;
+  background: #aaaaaa;
+}
+
+.bubble table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.bubble th,
+.bubble td {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.bubble th {
+  background: rgba(0, 0, 0, 0.05);
+  font-weight: 600;
+}
