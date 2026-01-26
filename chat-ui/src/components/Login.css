@@ -1,0 +1,120 @@
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #0f0f23 100%);
+  padding: 20px;
+}
+
+.login-box {
+  background: #1a1a2e;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid #2d2d44;
+}
+
+.login-box h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+  color: #e1e5e9;
+  text-align: center;
+}
+
+.login-subtitle {
+  color: #6b7280;
+  text-align: center;
+  margin: 0 0 32px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.form-group input {
+  padding: 12px 16px;
+  border: 2px solid #2d2d44;
+  border-radius: 8px;
+  font-size: 16px;
+  background: #0f0f23;
+  color: #e1e5e9;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #7c3aed;
+}
+
+.form-group input::placeholder {
+  color: #4b5563;
+}
+
+.login-error {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.login-button {
+  background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.login-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+.login-button:active {
+  transform: translateY(0);
+}
+
+.login-toggle {
+  margin-top: 24px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.login-toggle button {
+  background: none;
+  border: none;
+  color: #a78bfa;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-size: 14px;
+}
+
+.login-toggle button:hover {
+  text-decoration: underline;
+}

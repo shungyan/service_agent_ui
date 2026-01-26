@@ -1,16 +1,68 @@
-# React + Vite
+# Chat UI with PocketBase
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React-based chat application with PocketBase authentication and session management.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **User Authentication**: Login and registration with PocketBase
+- **Session Management**: Create, load, and delete chat sessions
+- **Message History**: Messages stored in JSON format with role (user/llm) and timestamps
+- **Agent Integration**: Sessions linked to agent sessions via `agno_session_id`
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Install Dependencies
 
-## Expanding the ESLint configuration
+```bash
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 2. Configure PocketBase
+
+Start PocketBase and create the `sessions` collection:
+
+```bash
+./pocketbase serve
+```
+
+Create a new collection called `sessions` with these fields:
+- `name` (text)
+- `user` (relation to users collection, cascade delete)
+- `agno_session_id` (text)
+- `messages` (json)
+
+Set API rules for sessions:
+- List/View: `@request.auth.id = user.id`
+- Create: `@request.auth.id != ""`
+- Update: `@request.auth.id = user.id`
+- Delete: `@request.auth.id = user.id`
+
+### 3. Run Development Server
+
+```bash
+npm run dev
+```
+
+### 4. Build for Production
+
+```bash
+npm run build
+```
+
+## PocketBase Schema
+
+See `POCKETBASE_SCHEMA.md` for detailed schema documentation.
+
+## Project Structure
+
+```
+src/
+  ├── components/
+  │   ├── Login.jsx      # Login/Register form
+  │   ├── Sidebar.jsx    # Session list sidebar
+  │   ├── ChatWindow.jsx # Message display area
+  │   └── ChatInput.jsx  # Message input field
+  ├── App.jsx            # Main app with auth & routing
+  ├── App.css            # App styles
+  └── index.css          # Global styles
+```

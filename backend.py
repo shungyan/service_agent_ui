@@ -6,7 +6,7 @@ import requests
 import uvicorn
 import json
 
-BASE_URL = "http://localhost:7777"  # <-- change this
+BASE_URL = "http://host.docker.internal:7777"  # <-- change this
 
 app = FastAPI()
 
@@ -149,4 +149,4 @@ def load_history(session_id: str, type: str = "agent"):
     
 
 if __name__ == "__main__":
-    uvicorn.run("backend:app", host="localhost", port=4896, reload=True)
+    uvicorn.run("backend:app", host="0.0.0.0", port=4896, reload=True)
