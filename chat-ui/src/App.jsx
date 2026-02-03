@@ -58,15 +58,51 @@ export default function App() {
     setMessages([])
   }
 
-  function normalizeMessage(m) {
-    if (!m) return null
-    return {
-      role: m.role === "assistant" ? "llm" : m.role,
-      content: m.content || m.message || m.text || ""
+function normalizeMessage(m) {
+  if (!m) return null
+  return {
+    role: m.role === "assistant" ? "llm" : m.role,
+    content: m.content || m.message || m.text || "",
+    files: m.files || [],
+    timestamp: m.timestamp || new Date().toISOString()
+  }
+}
+
+async function uploadFilesToPocketBase(files) {
+  if (!pb || files.length === 0) return []
+
+  const uploadedFiles = []
+  for (const file of files) {
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('user', user.id)
+
+      const record = await pb.collection('files').create(formData)
+
+      // Get the file URL from PocketBase
+      const fileUrl = `${POCKETBASE_URL}/api/files/${record.collectionId}/${record.id}/${record.file}`
+
+      uploadedFiles.push({
+        name: file.name,
+        type: file.type,
+        url: fileUrl,
+        recordId: record.id
+      })
+    } catch (err) {
+      console.error('Failed to upload file:', err)
+      // Fallback to temporary URL if upload fails
+      uploadedFiles.push({
+        name: file.name,
+        type: file.type,
+        url: URL.createObjectURL(file)
+      })
     }
   }
+  return uploadedFiles
+}
 
-  async function loadHistory(sessionId) {
+async function loadHistory(sessionId) {
     try {
       const session = await pb.collection("sessions").getOne(sessionId)
       const history = (session.messages || [])
@@ -101,16 +137,58 @@ export default function App() {
     }
   }
 
-  async function sendMessage(text) {
+  async function sendMessage(text, files = []) {
     if (!activeSession || !pb) return
 
     const isFirstMessage = messages.length === 0
 
-    const userMsg = { role: "user", content: text, timestamp: new Date().toISOString() }
-    
-    setMessages(m => [...m, userMsg])
+    // Upload files to PocketBase first
+    let uploadedFiles = []
+    if (files.length > 0) {
+      // Show temporary preview immediately
+      const tempFiles = files.map(file => ({
+        name: file.name,
+        type: file.type,
+        url: URL.createObjectURL(file),
+        isTemporary: true
+      }))
 
-    await appendMessageToSession(activeSession, userMsg)
+      const userMsgTemp = {
+        role: "user",
+        content: text,
+        files: tempFiles,
+        timestamp: new Date().toISOString()
+      }
+      setMessages(m => [...m, userMsgTemp])
+
+      // Upload files to PocketBase
+      uploadedFiles = await uploadFilesToPocketBase(files)
+
+      // Update message with permanent URLs
+      const userMsg = {
+        role: "user",
+        content: text,
+        files: uploadedFiles,
+        timestamp: new Date().toISOString()
+      }
+
+      // Replace the temporary message with the permanent one
+      setMessages(m => {
+        const newMessages = [...m]
+        newMessages[newMessages.length - 1] = userMsg
+        return newMessages
+      })
+
+      await appendMessageToSession(activeSession, userMsg)
+    } else {
+      const userMsg = {
+        role: "user",
+        content: text,
+        timestamp: new Date().toISOString()
+      }
+      setMessages(m => [...m, userMsg])
+      await appendMessageToSession(activeSession, userMsg)
+    }
 
     if (isFirstMessage) {
       const truncatedName = text.length > 30 ? text.substring(0, 30) + "..." : text
@@ -124,15 +202,21 @@ export default function App() {
 
     try {
       const session = await pb.collection("sessions").getOne(activeSession)
+
+      // ✅ Use FormData for multipart/form-data
+      const formData = new FormData()
+      formData.append("message", text)
+      formData.append("stream", "true")
+      formData.append("session_id", session.agno_session_id)
+
+      // ✅ append file if exists
+      files.forEach(file => {
+        formData.append("files", file)
+      })
       
       const res = await fetch(`${API_URL}/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          session_id: activeSession, 
-          message: text,
-          agno_session_id: session.agno_session_id
-        })
+        body: formData // note: no Content-Type header! browser sets it automatically
       })
 
       const reader = res.body.getReader()

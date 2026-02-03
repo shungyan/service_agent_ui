@@ -1,12 +1,13 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import requests
 import uvicorn
 import json
+from typing import List
 
-BASE_URL = "http://host.docker.internal:7777"  # <-- change this
+BASE_URL = "http://localhost:7777"  # <-- change this
 
 app = FastAPI()
 
@@ -21,7 +22,7 @@ class CreateSessionRequest(BaseModel):
     session_name: str
 
 @app.get("/sessions")
-def list_sessions(type: str = "agent"):
+def list_sessions(type: str = "team"):
     url = f"{BASE_URL}/sessions?type={type}"
     headers = {"Content-Type": "application/json"}
 
@@ -33,7 +34,7 @@ def list_sessions(type: str = "agent"):
 
 
 @app.post("/sessions")
-def create_session(req: CreateSessionRequest, type: str = "agent"):
+def create_session(req: CreateSessionRequest, type: str = "team"):
     url = f"{BASE_URL}/sessions?type={type}"
     headers = {"Content-Type": "application/json"}
     data = {"session_name": req.session_name}
@@ -60,16 +61,30 @@ class ChatRequest(BaseModel):
     message: str
 
 @app.post("/chat")
-def chat(req: ChatRequest):
-    agent_url = f"{BASE_URL}/agents/agno-agent/runs"
+async def chat(
+    message: str = Form(...),
+    session_id: str = Form(...),
+    files: List[UploadFile] = File(None)  # <-- accept multiple files
+):
+    agent_url = f"{BASE_URL}/teams/service-agent-team/runs"
 
-    files = {
-        "message": (None, req.message),
-        "stream": (None, "true"),
-        "session_id": (None, req.session_id),
-    }
+    # Build files for agent
+    multipart_data = [
+    ("message", (None, message or "")),
+    ("stream", (None, "true")),
+    ("session_id", (None, session_id)),
+]
 
-    r = requests.post(agent_url, files=files, stream=True)
+    # ✅ if a file was uploaded, include it
+    if files:
+        for file in files:
+            multipart_data.append(
+                ("files", (file.filename, file.file, file.content_type))
+            )
+        print(f"{len(files)} file(s) detected")
+
+    # Send to agent
+    r = requests.post(agent_url, files=multipart_data, stream=True)
     if not r.ok:
         raise HTTPException(status_code=r.status_code, detail=r.text)
 
@@ -128,7 +143,7 @@ def chat(req: ChatRequest):
                 except json.JSONDecodeError:
                     continue
 
-                if data.get("event") == "RunContent":
+                if data.get("event") == "TeamRunContent":
                     chunk = data.get("content")
                     if chunk:
                         yield chunk
