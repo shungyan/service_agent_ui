@@ -12,12 +12,28 @@ export default function ChatWindow({ messages }) {
       {messages.map((m, i) => (
         <div key={i} className={`bubble ${m.role}`}>
           
-          {/* 🔹 Render images ABOVE text */}
+          {/* 🔹 Render files ABOVE text */}
           {m.files?.length > 0 && (
-            <div className="msg-images">
-              {m.files
-                .filter(f => f.type?.startsWith("image/"))
-                .map((file, idx) => (
+            <div className="msg-files">
+              {m.files.map((file, idx) => {
+                const isPdf = file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf')
+                
+                if (isPdf) {
+                  return (
+                    <a
+                      key={idx}
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="pdf-link"
+                      download={file.name}
+                    >
+                      📄 {file.name}
+                    </a>
+                  )
+                }
+                
+                return (
                   <img
                     key={idx}
                     src={file.url}
@@ -29,7 +45,8 @@ export default function ChatWindow({ messages }) {
                       console.error('Failed to load image:', file.url)
                     }}
                   />
-                ))}
+                )
+              })}
             </div>
           )}
 

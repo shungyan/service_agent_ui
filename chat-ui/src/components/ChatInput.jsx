@@ -26,14 +26,19 @@ export default function ChatInput({ onSend }) {
 
   return (
     <div className="chat-input">
-      {/* Image previews */}
+      {/* File previews */}
       {files.length > 0 && (
         <div className="image-previews">
           {files.map((file, i) => {
-            const url = URL.createObjectURL(file)
+            const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+            const url = isPdf ? null : URL.createObjectURL(file)
             return (
-              <div key={i} className="image-wrapper">
-                <img src={url} alt={file.name} className="preview-img" />
+              <div key={i} className="file-wrapper">
+                {isPdf ? (
+                  <div className="pdf-preview">📄 {file.name}</div>
+                ) : (
+                  <img src={url} alt={file.name} className="preview-img" />
+                )}
                 <button
                   className="remove-img-btn"
                   onClick={() => removeFile(i)}
@@ -59,7 +64,7 @@ export default function ChatInput({ onSend }) {
           style={{ display: "none" }}
           onChange={handleFileChange}
           multiple
-          accept="image/*" // optional, only allow images
+          accept="image/*,application/pdf" // allow images and PDFs
         />
         <input
           value={text}
